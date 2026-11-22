@@ -128,7 +128,7 @@ function moveThief(world, dt, mx, my) {
   if (mx === 0 && my === 0) return;
   t.face = Math.atan2(my, mx);
   const step = TUNING.thiefSpeed * dt;
-  const nx = clamp(t.x + mx * step, FIELD.width - 0, FIELD.width);
+  const nx = clamp(t.x + mx * step, 0, FIELD.width);
   if (!circleHitsWalls(nx, t.y, TUNING.thiefRadius)) t.x = nx;
   const ny = clamp(t.y + my * step, 0, FIELD.height);
   if (!circleHitsWalls(t.x, ny, TUNING.thiefRadius)) t.y = ny;

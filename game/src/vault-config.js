@@ -82,7 +82,7 @@ export const TOOLS = [
 
 export const TUNING = {
   thiefSpeed: 175,
-  thiefRadius: 14,
+  thiefRadius: 19,
   guardSpeed: 58,
   guardChaseSpeed: 96,
   guardRange: 175,
