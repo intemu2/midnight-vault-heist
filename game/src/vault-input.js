@@ -8,7 +8,7 @@ export function makeInput(canvas) {
   let clicked = false;
 
   function keyName(event) {
-    const k = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+    const k = event.key.toLowerCase();
     return k === ' ' ? 'space' : k;
   }
 
