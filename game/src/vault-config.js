@@ -45,19 +45,23 @@ export const EXIT_DOOR = { x: 600, y: 696, w: 80, h: 24, label: 'GETAWAY' };
 export const THIEF_SPAWN = { x: 640, y: 640 };
 
 // Three safes, each worth $400 once cracked. The middle one sits higher.
+// Big gold boxes: the loot has to dominate the cover at a glance.
 export const SAFES = [
-  { id: 0, x: 420, y: 92, w: 64, h: 46, amount: 400 },
-  { id: 1, x: 608, y: 82, w: 64, h: 46, amount: 400 },
-  { id: 2, x: 796, y: 92, w: 64, h: 46, amount: 400 },
+  { id: 0, x: 420, y: 92, w: 76, h: 54, amount: 400 },
+  { id: 1, x: 608, y: 82, w: 76, h: 54, amount: 400 },
+  { id: 2, x: 796, y: 92, w: 76, h: 54, amount: 400 },
 ];
 
-// Two glass cases with bonus gems. Only the glass cutter opens them.
+// Four glass cases with bonus gems. Only the glass cutter opens them: two
+// hide in the dark routes, two sit out on the hall floor in plain sight.
 export const GLASS_CASES = [
   { id: 0, x: 96, y: 300, w: 56, h: 40, amount: 250 },
   { id: 1, x: 1128, y: 300, w: 56, h: 40, amount: 250 },
+  { id: 2, x: 520, y: 580, w: 56, h: 40, amount: 250 },
+  { id: 3, x: 760, y: 580, w: 56, h: 40, amount: 250 },
 ];
 
-// Six guards, each with a patrol loop of waypoints.
+// Eight guards, each with a patrol loop of waypoints.
 export const GUARD_PATROLS = [
   [{ x: 480, y: 280 }, { x: 800, y: 280 }, { x: 800, y: 340 }, { x: 480, y: 340 }],
   [{ x: 230, y: 300 }, { x: 230, y: 560 }, { x: 420, y: 560 }, { x: 420, y: 300 }],
@@ -65,6 +69,8 @@ export const GUARD_PATROLS = [
   [{ x: 430, y: 150 }, { x: 850, y: 150 }],
   [{ x: 280, y: 640 }, { x: 1000, y: 640 }],
   [{ x: 640, y: 300 }, { x: 640, y: 560 }],
+  [{ x: 480, y: 240 }, { x: 800, y: 240 }, { x: 800, y: 380 }, { x: 480, y: 380 }],
+  [{ x: 240, y: 600 }, { x: 1040, y: 600 }],
 ];
 
 // Two ceiling cameras, sweeping their cones across the hall.

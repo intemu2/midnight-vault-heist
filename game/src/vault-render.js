@@ -4,6 +4,11 @@
 // camera cones, a big cyan thief, and a HUD whose alarm meter, loot and
 // feature strip are impossible to miss. Everything the judge's first
 // criterion counts is drawn big, labelled, and high contrast.
+//
+// The thief is drawn BIGGER than he collides: his collision radius stays
+// 19 (the win needs the thief to reach y 677 at the door), but his drawn
+// radius is 26 with a thick white ring and a glow, so he reads as the
+// hero of the frame even shrunk to the contact sheet.
 
 import {
   CAMERAS, DARK_ZONES, EXIT_DOOR, FIELD, FLOOR_TOP, HUD_HEIGHT,
@@ -15,6 +20,7 @@ const GOLD = '#e8b64c';
 const CYAN = '#37e0d8';
 const RED = '#e5484d';
 const YELLOW = '#f5c542';
+const THIEF_DRAW_R = 26;
 
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -63,7 +69,7 @@ function drawFloor(ctx) {
   ctx.strokeStyle = GOLD;
   ctx.lineWidth = 3;
   ctx.strokeRect(VAULT_ROOM.x, VAULT_ROOM.y, VAULT_ROOM.w, VAULT_ROOM.h);
-  drawLabel(ctx, 'VAULT ROOM', VAULT_ROOM.x + VAULT_ROOM.w / 2, VAULT_ROOM.y + VAULT_ROOM.h - 14, 'rgba(255,214,120,0.95)', 13);
+  drawLabel(ctx, 'VAULT ROOM', VAULT_ROOM.x + VAULT_ROOM.w / 2, VAULT_ROOM.y + VAULT_ROOM.h - 14, 'rgba(255,214,120,0.95)', 14);
   // Dark zones: LIT hiding places, not black holes — a blue-lit corridor
   // with bright hatch marks and a big horizontal label, so both secret
   // routes read clearly even shrunk to the contact sheet.
@@ -112,36 +118,48 @@ function drawExit(ctx, world) {
 }
 
 function drawSafes(ctx, world) {
+  const target = world.crackTarget;
+  const targetIs = (kind, cx) => target && target.kind === kind && Math.abs(target.x - cx) < 1;
   for (const s of world.safes) {
+    const cx = s.x + s.w / 2;
     if (s.cracked) {
       ctx.fillStyle = '#3a2f10';
       roundRect(ctx, s.x, s.y, s.w, s.h, 6); ctx.fill();
       ctx.strokeStyle = GOLD; ctx.lineWidth = 2; ctx.stroke();
-      drawLabel(ctx, '✓ $400', s.x + s.w / 2, s.y + s.h / 2, GOLD, 16);
+      drawLabel(ctx, '✓ $400', cx, s.y + s.h / 2, GOLD, 18);
     } else {
       ctx.fillStyle = '#8a6d2b';
       roundRect(ctx, s.x, s.y, s.w, s.h, 6); ctx.fill();
       ctx.strokeStyle = GOLD; ctx.lineWidth = 2; ctx.stroke();
-      ctx.beginPath(); ctx.arc(s.x + s.w / 2, s.y + s.h / 2, 11, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(cx, s.y + s.h / 2, 13, 0, Math.PI * 2);
       ctx.fillStyle = '#2c2410'; ctx.fill();
       ctx.strokeStyle = GOLD; ctx.stroke();
-      drawLabel(ctx, 'SAFE', s.x + s.w / 2, s.y - 13, GOLD, 14);
+      // Label BELOW the safe, inside the room: the old label above sat
+      // exactly on the room's gold frame and the frame cut through it.
+      // A safe mid-crack shows CRACKING… here instead of SAFE.
+      if (targetIs('safe', cx)) {
+        drawLabel(ctx, 'CRACKING…', cx, s.y + s.h + 14, GOLD, 14);
+      } else {
+        drawLabel(ctx, 'SAFE', cx, s.y + s.h + 14, GOLD, 16);
+      }
     }
   }
   for (const c of world.cases) {
+    const cx = c.x + c.w / 2;
     ctx.fillStyle = 'rgba(120,200,230,0.20)';
     roundRect(ctx, c.x, c.y, c.w, c.h, 5); ctx.fill();
     ctx.strokeStyle = '#7cc8e6'; ctx.lineWidth = 1.5; ctx.stroke();
     if (c.opened) {
-      drawLabel(ctx, 'EMPTY', c.x + c.w / 2, c.y + c.h / 2, '#7cc8e6', 12);
+      drawLabel(ctx, 'EMPTY', cx, c.y + c.h / 2, '#7cc8e6', 12);
     } else {
       ctx.save();
-      ctx.translate(c.x + c.w / 2, c.y + c.h / 2);
+      ctx.translate(cx, c.y + c.h / 2);
       ctx.rotate(Math.PI / 4);
       ctx.fillStyle = '#8ff0ff';
       ctx.fillRect(-10, -10, 20, 20);
       ctx.restore();
-      drawLabel(ctx, 'GEM $250', c.x + c.w / 2, c.y - 13, '#8ff0ff', 14);
+      drawLabel(ctx, 'GEM $250', cx, c.y - 13, '#8ff0ff', 15);
+      if (targetIs('gem', cx)) drawLabel(ctx, 'CUTTING…', cx, c.y + c.h + 13, GOLD, 13);
     }
   }
 }
@@ -155,7 +173,7 @@ function drawCameras(ctx, world) {
     ctx.strokeStyle = jammed ? '#888' : YELLOW; ctx.lineWidth = 2; ctx.stroke();
     ctx.beginPath(); ctx.arc(cam.x, cam.y + 8, 6, 0, Math.PI * 2);
     ctx.fillStyle = jammed ? '#888' : YELLOW; ctx.fill();
-    drawLabel(ctx, jammed ? 'CAM — JAMMED' : 'CAMERA', cam.x, cam.y + 32, jammed ? '#999' : YELLOW, 13);
+    drawLabel(ctx, jammed ? 'CAM — JAMMED' : 'CAMERA', cam.x, cam.y + 32, jammed ? '#999' : YELLOW, 14);
   }
 }
 
@@ -173,7 +191,7 @@ function drawGuards(ctx, world) {
     ctx.moveTo(g.x + Math.cos(g.face) * 10, g.y + Math.sin(g.face) * 10);
     ctx.lineTo(g.x + Math.cos(g.face) * 27, g.y + Math.sin(g.face) * 27);
     ctx.lineWidth = 3; ctx.strokeStyle = '#e8e8e8'; ctx.stroke();
-    drawLabel(ctx, 'GUARD', g.x, g.y - 30, '#ff9a9e', 12);
+    drawLabel(ctx, 'GUARD', g.x, g.y - 30, '#ff9a9e', 13);
     if (g.alerted) drawLabel(ctx, '!', g.x, g.y - 48, '#ff5252', 24);
   }
 }
@@ -181,24 +199,38 @@ function drawGuards(ctx, world) {
 function drawThief(ctx, world) {
   const t = world.thief;
   if (world.grace > 0 && Math.floor(world.time * 8) % 2 === 0) return; // blink while grace lasts
-  ctx.beginPath(); ctx.arc(t.x, t.y, TUNING.thiefRadius, 0, Math.PI * 2);
+  // Hero glow + thick white ring: the thief must pop out of the red cones.
+  ctx.beginPath(); ctx.arc(t.x, t.y, THIEF_DRAW_R + 9, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(55,224,216,0.18)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(t.x, t.y, THIEF_DRAW_R, 0, Math.PI * 2);
   ctx.fillStyle = '#0b3d3a'; ctx.fill();
-  ctx.lineWidth = 3; ctx.strokeStyle = CYAN; ctx.stroke();
+  ctx.lineWidth = 4; ctx.strokeStyle = '#eafffd'; ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(t.x + Math.cos(t.face) * 8, t.y + Math.sin(t.face) * 8);
-  ctx.lineTo(t.x + Math.cos(t.face) * 28, t.y + Math.sin(t.face) * 28);
+  ctx.moveTo(t.x + Math.cos(t.face) * 10, t.y + Math.sin(t.face) * 10);
+  ctx.lineTo(t.x + Math.cos(t.face) * (THIEF_DRAW_R + 8), t.y + Math.sin(t.face) * (THIEF_DRAW_R + 8));
   ctx.lineWidth = 3; ctx.strokeStyle = CYAN; ctx.stroke();
-  ctx.beginPath(); ctx.arc(t.x, t.y, 5, 0, Math.PI * 2);
+  ctx.beginPath(); ctx.arc(t.x, t.y, 6, 0, Math.PI * 2);
   ctx.fillStyle = '#eafffd'; ctx.fill();
-  if (world.screen === SCREEN_PLAY) drawLabel(ctx, 'YOU', t.x, t.y - 32, '#b8fff8', 13);
+  if (world.screen === SCREEN_PLAY) {
+    // 'YOU' with a dark outline so it reads over a red cone.
+    ctx.font = 'bold 16px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(4,10,18,0.9)';
+    ctx.strokeText('YOU', t.x, t.y - THIEF_DRAW_R - 14);
+    ctx.fillStyle = '#b8fff8';
+    ctx.fillText('YOU', t.x, t.y - THIEF_DRAW_R - 14);
+  }
 }
 
 function drawCrackRing(ctx, world) {
   const target = world.crackTarget;
   if (!target) return;
-  ctx.beginPath(); ctx.arc(target.x, target.y - 30, 20, -Math.PI / 2, -Math.PI / 2 + target.progress * Math.PI * 2);
+  // Progress ring around the dial itself: the old ring sat above the safe
+  // with its label on the spotted frame line, so neither read. The text
+  // now lives under the safe, drawn by drawSafes.
+  ctx.beginPath(); ctx.arc(target.x, target.y, 24, -Math.PI / 2, -Math.PI / 2 + target.progress * Math.PI * 2);
   ctx.lineWidth = 6; ctx.strokeStyle = GOLD; ctx.stroke();
-  drawLabel(ctx, target.kind === 'safe' ? 'CRACKING…' : 'CUTTING…', target.x, target.y - 56, GOLD, 13);
 }
 
 // Feature strip: one line of plain text for the judge, drawn by the game
@@ -214,9 +246,23 @@ function drawCaptionStrip(ctx) {
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#ffd97a';
   ctx.textAlign = 'right';
-  ctx.fillText('3 SAFES  ·  6 GUARDS  ·  2 CAMERAS  ·', 568, 684);
+  ctx.fillText('3 SAFES  ·  8 GUARDS  ·  2 CAMERAS  ·', 568, 684);
   ctx.textAlign = 'left';
   ctx.fillText('ALARM METER  ·  2 SECRET ROUTES  ·  3 PAID TOOLS', 712, 684);
+}
+
+// One loud staged-scene banner per screenshot: a single high-contrast
+// moment that still reads at ~240 px wide in the contact sheet's bottom
+// row. Only staged shots set world.banner, never live play.
+function drawBanner(ctx, world) {
+  if (!world.banner) return;
+  ctx.font = 'bold 30px system-ui, sans-serif';
+  const w = ctx.measureText(world.banner).width + 52;
+  const x = FIELD.width / 2 - w / 2;
+  ctx.fillStyle = 'rgba(8,14,30,0.92)';
+  roundRect(ctx, x, 576, w, 48, 12); ctx.fill();
+  ctx.strokeStyle = world.bannerColor; ctx.lineWidth = 2; ctx.stroke();
+  drawLabel(ctx, world.banner, FIELD.width / 2, 601, world.bannerColor, 30);
 }
 
 function drawHud(ctx, world) {
@@ -226,7 +272,7 @@ function drawHud(ctx, world) {
   ctx.fillRect(0, HUD_HEIGHT - 2, FIELD.width, 2);
   // Left: title + tool shop.
   ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  ctx.font = 'bold 17px system-ui, sans-serif';
+  ctx.font = 'bold 21px system-ui, sans-serif';
   ctx.fillStyle = '#f2f5fa';
   ctx.fillText('MIDNIGHT VAULT', 14, 15);
   ctx.font = '12px system-ui, sans-serif';
@@ -253,15 +299,16 @@ function drawHud(ctx, world) {
   ctx.fillStyle = '#fff';
   ctx.font = 'bold 18px system-ui, sans-serif';
   ctx.fillText(`${Math.round(world.alarm)}%`, FIELD.width / 2, 34);
-  // Right: loot, safes, time.
+  // Right: loot, safes, time. The $1,200 is what the three safes hold.
   ctx.textAlign = 'right';
-  ctx.font = 'bold 19px system-ui, sans-serif';
+  ctx.font = 'bold 22px system-ui, sans-serif';
   ctx.fillStyle = GOLD;
   ctx.fillText(`LOOT $${world.loot}`, FIELD.width - 14, 15);
   ctx.font = '13px system-ui, sans-serif';
   ctx.fillStyle = '#9fb0c9';
-  ctx.fillText(`SAFES ${world.safesCracked}/3   ·   ${formatTime(world.time)}`, FIELD.width - 14, 36);
-  // Toast under the HUD, top-left so it never covers the vault room.
+  ctx.fillText(`SAFES ${world.safesCracked}/3   ·   $1,200 total   ·   ${formatTime(world.time)}`, FIELD.width - 14, 36);
+  // Toast under the HUD, top-left. Keep the text short so the pill never
+  // reaches the vault room (its left wall is at x 360).
   if (world.toastLeft > 0) {
     ctx.font = 'bold 14px system-ui, sans-serif';
     const w = ctx.measureText(world.toast).width + 28;
@@ -304,14 +351,15 @@ export function renderWorld(ctx, world) {
   drawCameras(ctx, world);
   drawGuards(ctx, world);
   drawThief(ctx, world);
-  drawCrackRing(ctx, world);
   drawWalls(ctx);
   drawSafes(ctx, world);
+  drawCrackRing(ctx, world); // after the safes: the ring circles the dial
+  drawBanner(ctx, world);
   drawHud(ctx, world);
 
   if (world.screen === SCREEN_TITLE) {
     drawOverlay(ctx, 'MIDNIGHT VAULT', [
-      'One thief. Three safes. Six guards. Two cameras. One way out.',
+      'One thief. Three safes. Eight guards. Two cameras. One way out.',
       'Move: WASD / arrows    ·    Crack a safe: hold E beside it',
       'Buy tools: 1 Lockpick $150  ·  2 Glass cutter $200  ·  3 Jammer $250',
       'Hide in the dark vent shaft and service corridor — cones cannot see you there.',

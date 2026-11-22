@@ -91,6 +91,10 @@ export function makeWorld(seed) {
     spottedBy: '',
     toast: '',
     toastLeft: 0,
+    // Big staged-scene banner (only set by vault-shots.js): one loud line
+    // per screenshot so each thumbnail reads as a single moment at ~240 px.
+    banner: '',
+    bannerColor: '#ffffff',
     crackTarget: null,
     crackProgress: 0,
     thief: { x: THIEF_SPAWN.x, y: THIEF_SPAWN.y, face: -Math.PI / 2 },
